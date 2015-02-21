@@ -20,3 +20,5 @@ pom.xml.asc
 /resources/public/scripts/*
 !pixi.dev.js
 /resources/assets
+.idea/
+chocolatier.iml
