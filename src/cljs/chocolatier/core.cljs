@@ -55,11 +55,12 @@
      being recalculated
    - scene-id: ignored"
   [game-state scene-id]
-  (let [state (local state)
-        systems (ces/get-system-fns @state (-> @state :scenes scene-id))]
+  (let [state (local game-state)
+        systems (ces/get-system-fns game-state (-> game-state :scenes scene-id))]
     (forloop [[i 0] (< i (count systems)) (inc i)]
-             (>> ((systems i) (<< state))))
-    (swap! state (<< state))
+             (>> state ((systems i) (<< state))))
+    ;; Copy the state into an atom so we can inspect while running
+    (reset! *state (<< state))
     (if @*running
       (request-animation #(game-loop (<< state) scene-id))
       (debug "Game stopped"))))
@@ -142,15 +143,14 @@
                        ;; Player 1 entity
                        (mk-player-1)
                        ;; Other entities
-                       (ces/iter-fns (for [i (range 25)]
-                                       #(create-enemy! % stage (keyword (gensym)) 20)))
-                       )]
-    (debug "Loading game state into atom")
-    (reset! *state init-state)
+                       (ces/iter-fns
+                        (vec
+                         (for [i (range 25)]
+                           #(create-enemy! % stage (keyword (gensym)) 20)))))]
     ;; Append the canvas to the dom    
     (dom/append! (sel1 :body) (.-view renderer))             
     ;; Start the game loop
-    (game-loop *state :default)))
+    (game-loop init-state :default)))
 
 (defn start-game!
   "Load all assets and call the tilemap loader. This is some async wankery to

@@ -32,12 +32,14 @@
 (defn iter-fns
   "Pass an initial value through a collection of functions with the 
    result of the function called is passed as an arg to the next
-   function."
+   function.
+
+   WARNING: fns must be a non lazy collection"
   [state fns]
   (let [local-state (local state)
         len-fns (count fns)]
     (forloop [[i 0] (< i len-fns) (inc i)]
-             (>> (f (<< local-state))))
+             (>> local-state ((fns i) (<< local-state))))
     (<< local-state)))
 
 (defn get-system-fns
